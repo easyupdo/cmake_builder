@@ -1,0 +1,5 @@
+project(src2)
+aux_source_directory(/root/CMake_Builder/src/src2 SRC_DIR)
+set(INCLUDE_DIR ${SRC_DIR})
+include_directories(${INCLUDE_DIR})
+add_library(src2 SHARED ${SRC_DIR})
