@@ -1,13 +1,20 @@
-#include "cmake_build.h"
+﻿#include "cmake_build.h"
+
+QString cmake_build::exec_name;
 
 cmake_build::cmake_build()
 {
 
 }
-QString cmake_build::project(QString current_dir)
+
+QString cmake_build::cmake_minimum_required(QString version)
 {
-    int index = current_dir.lastIndexOf("/");
-    QString project_name = current_dir.right(current_dir.length() - index - 1);
+    return QString::fromLocal8Bit("cmake_minimum_required")+QString::fromLocal8Bit("(")+version+QString::fromLocal8Bit(")");
+}
+QString cmake_build::project(QString project_name)
+{
+
+    exec_name = project_name;
     return QString::fromLocal8Bit("project")+QString::fromLocal8Bit("(")+project_name+QString::fromLocal8Bit(")");
 }
 

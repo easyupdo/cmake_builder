@@ -1,4 +1,4 @@
-#include "project_guide.h"
+﻿#include "project_guide.h"
 #include "ui_project_guide.h"
 #include "mainwindow.h"
 #include <QApplication>
@@ -11,6 +11,7 @@ Project_guide::Project_guide(QWidget *parent) :
     ui(new Ui::Project_guide)
 {
     ui->setupUi(this);
+    this->setWindowTitle("Project Setting");
     ui->checkBox_6->setEnabled(false);//static
     ui->checkBox_5->setEnabled(false);//shared
 
@@ -28,7 +29,13 @@ Project_guide::~Project_guide()
 void Project_guide::on_pushButton_clicked()
 {
 
-    if(ui->checkBox_7->checkState() == Qt::Checked)//root exec
+    project_config.project_name = ui->lineEdit->text();
+    if(project_config.project_name.length() == 0)
+    {
+        QMessageBox box;
+        box.setText("Please set project name!");
+        box.exec();
+    }else if(ui->checkBox_7->checkState() == Qt::Checked)//root exec
     {
         project_config.project_type = ERootProjectType::EXEC;
         project_config.root_lib_type = ERootLibType::ROOT_LIB_NONE;

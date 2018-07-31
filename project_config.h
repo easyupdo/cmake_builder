@@ -1,6 +1,6 @@
-#ifndef PROJECT_CONFIG_H
+﻿#ifndef PROJECT_CONFIG_H
 #define PROJECT_CONFIG_H
-
+#include <QString>
 
 
 enum ERootLibType
@@ -27,6 +27,7 @@ enum ERootProjectType
 
 struct SProjcetConfig
 {
+    QString project_name;
     ERootProjectType project_type;
     enum ERootLibType root_lib_type;
     enum ESubLibType sub_lib_type;

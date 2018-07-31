@@ -27,7 +27,7 @@
      <string>Test SetTree</string>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -56,7 +56,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -89,7 +89,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -102,7 +102,7 @@
      <item row="0" column="0">
       <widget class="QGroupBox" name="groupBox_2">
        <property name="title">
-        <string>GroupBox</string>
+        <string>Explorer</string>
        </property>
        <layout class="QGridLayout" name="gridLayout">
         <item row="0" column="0">
@@ -114,7 +114,7 @@
      <item row="0" column="1">
       <widget class="QGroupBox" name="groupBox_3">
        <property name="title">
-        <string>GroupBox</string>
+        <string>Browser</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="0">
@@ -132,7 +132,7 @@
      <x>0</x>
      <y>0</y>
      <width>1095</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuCMakeLists">
@@ -149,6 +149,7 @@
     <property name="title">
      <string>Options</string>
     </property>
+    <addaction name="actionSet"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -161,6 +162,11 @@
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionSet">
+   <property name="text">
+    <string>设置</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

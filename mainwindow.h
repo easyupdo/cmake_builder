@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -19,6 +19,9 @@
 #include <QMessageBox>
 #include <QList>
 #include "project_config.h"
+#include "set.h"
+#include "global.h"
+#include <QModelIndex>
 
 namespace Ui {
 class MainWindow;
@@ -28,8 +31,11 @@ enum BuildOrClean
 {
     BUILD = 0,
     CLEAN,
-    NONE
+    NONE,
+    QUOTE
 };
+
+
 
 
 class MainWindow : public QMainWindow
@@ -41,13 +47,20 @@ public:
     ~MainWindow();
 
      void AnalysisCurrentDirectoryFile(QStandardItem *item, QString root_dir,int dir_depth ,BuildOrClean options_type);
-     void SetADirectoryCMakeListFile(QString current_dir, QString cmakelists_file, QList<QString> sub_lists, int dir_depth, QString lib_type_string = "STATIC");
+     void SetADirectoryCMakeListFile(QString current_dir, QString cmakelists_file, QList<QString> sub_lists, QString lib_type_string = "STATIC");
      void GetDirecotryUnderCurrentDirectory(QString root_dir);
      void SetTree(QString dir);
      QString CreateCmakeListsFile(QString current_dir);
      void CleanCmakeListsFile(QString current_dir);
 
      void setProjectConfig(SProjcetConfig project_config);
+
+     void SetProjectProperty(QString project_name, ProjectProperty type);
+
+
+     QString GetRelativePath(QString dir);
+
+
 
 private slots:
     void on_pushButton_clicked();
@@ -60,6 +73,14 @@ private slots:
 
     void on_treeView_doubleClicked(const QModelIndex &index);
 
+    void on_actionSet_triggered();
+
+
+    void on_treeView_customContextMenuRequested(const QPoint &pos);
+
+    void Quote(bool checked);
+
+
 public slots:
 
 
@@ -69,9 +90,21 @@ private:
     QStandardItemModel *dir_model;
     bool builded_flag;
 
+    // QString root_dir_path;
+
     QStandardItem * root_item ;
+    QStandardItem *quote_item;
+    int quote_item_acount;
+    QStringList quote_list;
+
+
+    QString project_name;
+    ProjectProperty ProjectType;
+    Set * set;
+
 
     SProjcetConfig project_config;
+
 
 };
 

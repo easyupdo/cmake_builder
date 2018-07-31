@@ -1,4 +1,4 @@
-#ifndef CMAKE_BUILD_H
+﻿#ifndef CMAKE_BUILD_H
 #define CMAKE_BUILD_H
 
 #include <QString>
@@ -24,7 +24,8 @@ class cmake_build
 public:
     cmake_build();
 
-    static QString project(QString current_dir);
+    static QString cmake_minimum_required(QString version);
+    static QString project(QString project_name);
     static QString aux_source_directory(QString dir, QString source_dir, cmake_type type);
     static QString set(QString argv, QString dir, cmake_type type);
     static QString include_directories(QString include_dir, cmake_type type);
@@ -40,6 +41,9 @@ public:
     static QString SetTribleParameter(QString options,QString Parameter1,QString Parameter2,cmake_type type1,QString lib_type);
     static QString SetDoubleParameter(QString options, QString Parameter1, QString Parameter2, enum cmake_type type);
     static QString SetOneParameter(QString options, QString Parameter1, cmake_type type);
+    static QString exec_name;
+
+
 
 };
 

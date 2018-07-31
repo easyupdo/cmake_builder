@@ -1,4 +1,4 @@
- #include "mainwindow.h"
+﻿ #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "cmake_build.h"
 
@@ -7,9 +7,14 @@ MainWindow::MainWindow(QWidget *parent) :
     builded_flag(false),
     dir_model(NULL),
     root_item(NULL),
+    quote_item_acount(0),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setWindowTitle("Cmake_builder");
+    set = new Set;
+    connect(set,&Set::ToMainWindows,this,&MainWindow::SetProjectProperty);
+    ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
 
 
 }
@@ -21,8 +26,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_clicked()
 {
+
     QString source_dir = QFileDialog::getExistingDirectory();
+    quote_item_acount = 0;
+    quote_list.clear();
     ui->lineEdit->setText(source_dir);
+    on_pushButton_3_clicked();
     SetTree(source_dir);
     AnalysisCurrentDirectoryFile(root_item,source_dir,0,NONE);
 }
@@ -46,7 +55,14 @@ void MainWindow::SetTree(QString dir)
     root_item = new QStandardItem(root_dir);
     root_item->setEditable(false);
     root_item->setCheckable(true);
+
+    quote_item = new QStandardItem(QString::fromLocal8Bit("引用"));
+
     dir_model->setItem(0,0,root_item);
+    root_item->setChild(0,0,quote_item);
+    quote_item->setEditable(false);
+
+
     ui->treeView->setModel(dir_model);
 
 }
@@ -54,53 +70,132 @@ void MainWindow::SetTree(QString dir)
 
 void MainWindow::AnalysisCurrentDirectoryFile(QStandardItem *item ,QString root_dir,int dir_depth, enum BuildOrClean options_type)//Dir And File   NOUSED
 {
+    int item_rows = 0;
     QList<QString>current_sub_direcotry_lists;
     qDebug()<<"Set root_Dir"<<root_dir;
 
-    QString cmake_config_path;
 
-
-    CleanCmakeListsFile(root_dir);//clean
      if(options_type == BUILD)
     {
-        cmake_config_path = CreateCmakeListsFile(root_dir);
+         QString cmake_config_path;
+         cmake_config_path = CreateCmakeListsFile(root_dir);
+         //root dir CMakeLists.txt
+         this->SetADirectoryCMakeListFile(root_dir,cmake_config_path,quote_list);// have subdirectory
+
+         QStringList::iterator itt = quote_list.begin();
+         int row = 0;
+         for(;itt != quote_list.end();itt++)//add quote sub project
+         {
+             QStandardItem * sub_quote_item = new QStandardItem(*itt);
+             sub_quote_item->setEditable(false);
+             quote_item->setChild(row,sub_quote_item);
+             qDebug()<<"######################:"<<*itt<<row;
+
+             QString cmake_config_path;
+             cmake_config_path = CreateCmakeListsFile(*itt);
+             QStringList new_list;
+             new_list.clear();
+              this->SetADirectoryCMakeListFile(*itt,cmake_config_path,new_list);// have subdirectory
+
+             QFileInfoList file_full = QDir(*itt).entryInfoList();
+             QFileInfoList::iterator itd = file_full.begin();
+             item_rows = 0;
+             for(itd;itd!=file_full.end();itd++)// add directory files
+             {
+                     if(!(*itd).suffix().compare("cpp") || !(*itd).suffix().compare("c") || !(*itd).suffix().compare("h") || !(*itd).fileName().compare("CMakeLists.txt"))// file just .c .cpp
+                     {
+                         qDebug()<<(*itd).fileName();
+                         QStandardItem * item1 = new QStandardItem((*itd).fileName());
+                         item1->setEditable(false);
+                         sub_quote_item->setChild(item_rows,0,item1);
+                         item_rows +=1;
+                     }
+              }
+               row += 1;
+
+         }
+
     }
 
-    QFileInfoList file_full = QDir(root_dir).entryInfoList();
-    QFileInfoList::iterator it = file_full.begin();
-    int item_rows = 0;
-    for(it;it!=file_full.end();it++)
-    {
-        if((*it).isDir())
-        {
-//            //qDebug()<<"This is DIR";
-            if((*it).fileName().compare(".") && (*it).fileName().compare(".."))//ready sub direcotry not include . .. dir
-            {
-                dir_depth +=1;
-                current_sub_direcotry_lists.append((*it).filePath());
-                qDebug()<<"This is Dir"<<(*it).fileName()<<"Path"<<(*it).filePath();
-                QStandardItem * item1 = new QStandardItem((*it).fileName());
-                item1->setEditable(false);
-                item1->setCheckable(true);
-                item->setChild(item_rows,0,item1);
-                item_rows +=1;
-                AnalysisCurrentDirectoryFile(item1,(*it).filePath(),dir_depth,options_type);
-            }
-        }
-        else
-        {
-            if(!(*it).suffix().compare("cpp") || !(*it).suffix().compare("c") || !(*it).suffix().compare("h") || !(*it).fileName().compare("CMakeLists.txt"))// file just .c .cpp
-            {
-                qDebug()<<(*it).fileName();
-                QStandardItem * item1 = new QStandardItem((*it).fileName());
-                item1->setEditable(false);
-                item->setChild(item_rows,0,item1);
-                item_rows +=1;
-            }
-        }
+
+     if(options_type == QUOTE)
+     {
+         item_rows = 0;
+         QFileInfoList file_full = QDir(root_dir).entryInfoList();
+
+
+         QFileInfoList::iterator it = file_full.begin();
+
+         for(it;it!=file_full.end();it++)
+         {
+             qDebug()<<"&&&&&&&&&&&&&&&&:"<<(*it).filePath();
+                 if(!(*it).suffix().compare("cpp") || !(*it).suffix().compare("c") || !(*it).suffix().compare("h") || !(*it).fileName().compare("CMakeLists.txt"))// file just .c .cpp
+                 {
+                     qDebug()<<(*it).fileName();
+                     QStandardItem * item1 = new QStandardItem((*it).fileName());
+                     item1->setEditable(false);
+                     item->setChild(item_rows,0,item1);
+                     item_rows +=1;
+                 }
+          }
      }
-    dir_depth -=1;//use for determine root dir;
-    this->SetADirectoryCMakeListFile(root_dir,cmake_config_path,current_sub_direcotry_lists,dir_depth);// have subdirectory
+
+
+    if(options_type == CLEAN)
+    {
+         CleanCmakeListsFile(root_dir);//clean
+        int row = 0;
+        QStringList::iterator it = quote_list.begin();
+        for(;it != quote_list.end();it++)
+        {
+            CleanCmakeListsFile(*it);//clean
+            QStandardItem * sub_quote_item = new QStandardItem(*it);
+             sub_quote_item->setEditable(false);
+            quote_item->setChild(row,sub_quote_item);
+
+            QFileInfoList file_full = QDir(*it).entryInfoList();
+            QFileInfoList::iterator itd = file_full.begin();
+            item_rows = 0;
+            for(itd;itd!=file_full.end();itd++)
+            {
+                    if(!(*itd).suffix().compare("cpp") || !(*itd).suffix().compare("c") || !(*itd).suffix().compare("h") || !(*itd).fileName().compare("CMakeLists.txt"))// file just .c .cpp
+                    {
+                        qDebug()<<(*itd).fileName();
+                        QStandardItem * item1 = new QStandardItem((*itd).fileName());
+                        item1->setEditable(false);
+                        sub_quote_item->setChild(item_rows,0,item1);
+                        qDebug()<<"item_rows:"<<item_rows;
+                        item_rows +=1;
+                    }
+             }
+
+            row += 1;
+        }
+    }
+
+    if(options_type == NONE)
+    {
+            item_rows = 1;
+            QFileInfoList file_full = QDir(root_dir).entryInfoList();
+            QFileInfoList::iterator it = file_full.begin();
+            for(it;it!=file_full.end();it++)
+            {
+
+                    if(!(*it).suffix().compare("cpp") || !(*it).suffix().compare("c") || !(*it).suffix().compare("h") || !(*it).fileName().compare("CMakeLists.txt"))// file just .c .cpp
+                    {
+                        qDebug()<<(*it).fileName();
+                        QStandardItem * item1 = new QStandardItem((*it).fileName());
+                        item1->setEditable(false);
+                        item->setChild(item_rows,0,item1);
+                        item_rows +=1;
+                    }
+             }
+    }
+
+
+
+
+
 
 }
 
@@ -148,9 +243,12 @@ void MainWindow::CleanCmakeListsFile(QString current_dir)
     if(new_file.exists())
         new_file.remove();
     new_file.close();
+
+    qDebug()<<"Clean CMakeLists.txt:"<<cmake_config_path;
+
 }
 
-void MainWindow::SetADirectoryCMakeListFile(QString current_dir, QString cmakelists_file, QList<QString> sub_lists,int dir_depth, QString lib_type_string)// A directory
+void MainWindow::SetADirectoryCMakeListFile(QString current_dir, QString cmakelists_file, QList<QString> sub_lists, QString lib_type_string)// A directory
 {
     QString str;
     qDebug()<<cmakelists_file;
@@ -162,55 +260,74 @@ void MainWindow::SetADirectoryCMakeListFile(QString current_dir, QString cmakeli
 
     if(cmake_config_file.isOpen())
     {
-        QString source_dir_argv = "SRC_DIR" ;
+        QString source_dir_argv =  current_dir.right(current_dir.length()- current_dir.lastIndexOf("/")-1) + "SRC" ;
 
-        QString include_dir_argv = "INCLUDE_DIR";
+        QString include_dir_argv = current_dir.right(current_dir.length()- current_dir.lastIndexOf("/")-1) + "INCLUDE_DIR";
 
 
 
-        str = cmake_build::project(current_dir);
+
+        str = cmake_build::cmake_minimum_required("VERSION 3.10");
         cmake_config_file.write(str.toLatin1());
         cmake_config_file.write("\n");
 
+        if(sub_lists.length() > 0)
+        str = cmake_build::project(this->project_config.project_name);
+        else
+        str = cmake_build::project(current_dir.right(current_dir.length()- current_dir.lastIndexOf("/")-1));
+
+            cmake_config_file.write(str.toLatin1());
+            cmake_config_file.write("\n");
+
+          //  QString RelativePath =  GetRelativePath(current_dir);
+            str = cmake_build::aux_source_directory(current_dir,source_dir_argv,CMAKE_STRING);
+            qDebug()<<str;
+            cmake_config_file.write(str.toLatin1());
+            cmake_config_file.write("\n");
+
+    //set_include
+            str.clear();
+            QString include_argv = "INCLUDE_DIR";
+            str = cmake_build::set(include_dir_argv,source_dir_argv,CMAKE_ARGV);
+            qDebug()<<str;
+            cmake_config_file.write(str.toLatin1());
+            cmake_config_file.write("\n");
 
 
-        str = cmake_build::aux_source_directory(current_dir,source_dir_argv,CMAKE_STRING);
-        qDebug()<<str;
-        cmake_config_file.write(str.toLatin1());
-        cmake_config_file.write("\n");
+            str.clear();
+            str = cmake_build::include_directories(include_dir_argv,CMAKE_ARGV);
+            qDebug()<<str;
+            cmake_config_file.write(str.toLatin1());
+            cmake_config_file.write("\n");
 
-//set_include
-        str.clear();
-        QString include_argv = "INCLUDE_DIR";
-        str = cmake_build::set(include_argv,source_dir_argv,CMAKE_ARGV);
-        qDebug()<<str;
-        cmake_config_file.write(str.toLatin1());
-        cmake_config_file.write("\n");
+            qDebug()<<"ERootProjectTypeKKKKKKKKKKKKKKK"<<project_config.project_type;
 
-
-        str.clear();
-        str = cmake_build::include_directories(include_dir_argv,CMAKE_ARGV);
-        qDebug()<<str;
-        cmake_config_file.write(str.toLatin1());
-        cmake_config_file.write("\n");
-
-
-
-
-
-
-        qDebug()<<"DDDDDDDDDDDDDDDDDDDDDD"<<dir_depth;
-        if(!dir_depth)// root dir first time
-        {
             if(project_config.project_type == ERootProjectType::EXEC)
             {
-                str.clear();
-                QString exec_name = "main";
-                str = cmake_build::add_executable(exec_name,source_dir_argv,CMAKE_ARGV);
-                qDebug()<<str;
-                cmake_config_file.write(str.toLatin1());
-                cmake_config_file.write("\n");
+               if(sub_lists.length() > 0)
+               {
+                   str.clear();
+                   str = cmake_build::add_executable(cmake_build::exec_name,source_dir_argv,CMAKE_ARGV);
+                   qDebug()<<str;
+                   cmake_config_file.write(str.toLatin1());
+                   cmake_config_file.write("\n");
+               }else
+               {
+                   str.clear();
+                   qDebug()<<"KKKKK"<<project_config.sub_lib_type;
+                   if(project_config.sub_lib_type == ESubLibType::SUB_LIB_STATIC)
+                       str =  cmake_build::add_library(current_dir,source_dir_argv,CMAKE_ARGV,STATIC);
+                   else if(project_config.sub_lib_type == ESubLibType::SUB_LIB_SHARED)
+                       str =  cmake_build::add_library(current_dir,source_dir_argv,CMAKE_ARGV,SHARED);
+                   qDebug()<<str;
+                   cmake_config_file.write(str.toLatin1());
+                   cmake_config_file.write("\n");
+               }
             }
+
+
+
+
             if(project_config.project_type == ERootProjectType::LIB)
             {
                 str.clear();
@@ -223,68 +340,51 @@ void MainWindow::SetADirectoryCMakeListFile(QString current_dir, QString cmakeli
                 cmake_config_file.write("\n");
             }
 
-        }else
-        {
+
+            ///******************************* 添加 第三方 库 *******************************
+                if(sub_lists.length() <= 0)
+                {
+
+                }
+
+           //******************************** 添加 第三方 库 **************************/
+
+       // /*************************** 添加第三方链接库 **************************
+         // //添加第三方库 使用find_ 不要使用link_directories() 使用此方法的时候 会出现找不到指定路径的库
             str.clear();
-            qDebug()<<"KKKKK"<<project_config.sub_lib_type;
-            if(project_config.sub_lib_type == ESubLibType::SUB_LIB_STATIC)
-                str =  cmake_build::add_library(current_dir,source_dir_argv,CMAKE_ARGV,STATIC);
-            else if(project_config.sub_lib_type == ESubLibType::SUB_LIB_SHARED)
-                str =  cmake_build::add_library(current_dir,source_dir_argv,CMAKE_ARGV,SHARED);
-            qDebug()<<str;
-            cmake_config_file.write(str.toLatin1());
-            cmake_config_file.write("\n");
-        }
+            QString lib_name = "hello";
 
+            if(sub_lists.length() > 0)
+            for(int i =0;i<sub_lists.size();i++)
+            {
 
-        str.clear();
-        QString lib_name = "hello";
-
-
-
-        for(int i =0;i<sub_lists.size();i++)
-        {
-
-
-            str.clear();
-            QString lib_argv = "LIB_DIR";
-            str = cmake_build::set(lib_argv,sub_lists.at(i),CMAKE_STRING);
-            qDebug()<<str;
-            cmake_config_file.write(str.toLatin1());
-            cmake_config_file.write("\n");
-
-            str.clear();
-            str = cmake_build::link_directories(lib_argv,CMAKE_ARGV);
-            qDebug()<<str;
-            cmake_config_file.write(str.toLatin1());
-            cmake_config_file.write("\n");
-
-            str = cmake_build::target_link_libraries(current_dir,sub_lists.at(i),CMAKE_STRING);
-            qDebug()<<str;
-            cmake_config_file.write(str.toLatin1());
-            cmake_config_file.write("\n");
-        }
+                str = cmake_build::target_link_libraries(this->project_config.project_name,sub_lists.at(i),CMAKE_STRING);
+                qDebug()<<str;
+                cmake_config_file.write(str.toLatin1());
+                cmake_config_file.write("\n");
+            }
+        //*************************** 添加第三方链接库 ****************************/
 
 
 
 
 
+    //add_sub
+            if(sub_lists.length() > 0)
+            {
+                qDebug()<<"*****************************"<<sub_lists.length();
+                for(int i = 0;i<sub_lists.size();i++)
+                {
+                    str.clear();
 
-//add_sub
-        for(int i = 0;i<sub_lists.size();i++)
-        {
-            str.clear();
-            str = cmake_build::add_subdirectory(sub_lists.at(i),CMAKE_STRING);
-            qDebug()<<str;
-            cmake_config_file.write(str.toLatin1());
-            cmake_config_file.write("\n");
-        }
-
-
-
+                    //QString RelativePath =  GetRelativePath(sub_lists.at(i));
+                    str = cmake_build::add_subdirectory(sub_lists.at(i),CMAKE_STRING);
+                    qDebug()<<str;
+                    cmake_config_file.write(str.toLatin1());
+                    cmake_config_file.write("\n");
+                }
+            }
     }
-
-
 }
 
 void MainWindow::on_pushButton_2_clicked()
@@ -298,6 +398,7 @@ void MainWindow::on_pushButton_2_clicked()
     {
         SetTree(ui->lineEdit->text());
         AnalysisCurrentDirectoryFile(root_item,ui->lineEdit->text(),0,BUILD);
+        AnalysisCurrentDirectoryFile(root_item,ui->lineEdit->text(),0,NONE);
         ui->treeView->expandAll();
     }
 
@@ -317,6 +418,7 @@ void MainWindow::on_pushButton_3_clicked()
 //        dir_model->clear();
         SetTree(ui->lineEdit->text());
         AnalysisCurrentDirectoryFile(root_item,ui->lineEdit->text(),0,CLEAN);
+         AnalysisCurrentDirectoryFile(root_item,ui->lineEdit->text(),0,NONE);
 
         ui->treeView->update();
         ui->treeView->expandAll();
@@ -339,24 +441,37 @@ void MainWindow::on_pushButton_5_clicked()
 
 void MainWindow::on_treeView_doubleClicked(const QModelIndex &index)
 {
+    bool flag = false;
     QString file_name = index.data().toString();
     QString file_path = file_name;
 
+    QString dir_parent_str;
+    dir_parent_str.clear();
     QModelIndex current_index = index;
     while(current_index.parent().isValid())
     {
+
         current_index  = current_index.parent();
-        file_path = current_index.data().toString() + "/" + file_path;
-        qDebug()<<"1"<<file_path;
+        dir_parent_str  = current_index.data().toString();
+        if(!dir_parent_str.compare(QString::fromLocal8Bit("引用")))
+        {
+            flag = true;
+            break;
+        }
+        file_path = current_index.data().toString()+ "/" + file_path;
     }
 
-    qDebug()<<"L"<<file_path;
+    if(!flag)
+    {
+        qDebug()<<"L"<<file_path;
+        int file_index = file_path.indexOf("/");
+        file_path = file_path.right(file_path.length() - file_index - 1);
+        qDebug()<<"file:"<<file_path;
 
-    int file_index = file_path.indexOf("/");
-    file_path = file_path.right(file_path.length() - file_index - 1);
-    qDebug()<<"file:"<<file_path;
+        file_path = ui->lineEdit->text() + "/" + file_path;
+        qDebug()<<"all file path:"<<file_path;
+    }
 
-    file_path = ui->lineEdit->text() + "/" + file_path;
 
     QFile file(file_path);
     file.open(QIODevice::ReadOnly);
@@ -371,4 +486,120 @@ void MainWindow::setProjectConfig(SProjcetConfig project_config)
     qDebug()<<"Project type"<<this->project_config.project_type;//1 exec 2 lib (root dir)
     qDebug()<<"Project root directory type"<<this->project_config.root_lib_type;
     qDebug()<<"project sub directory type:"<<this->project_config.sub_lib_type;
+}
+
+
+void MainWindow::SetProjectProperty(QString project_name , ProjectProperty type)
+{
+    this->project_name = project_name;
+    this->ProjectType = type;
+}
+
+QString MainWindow::GetRelativePath(QString dir)
+{
+    qDebug()<<"NNNNNNNNNNNN"<<dir;
+    QString root_dir = ui->lineEdit->text();
+
+
+    int RelativeAcount = 0;
+    QString RelativeDir;
+    QString now_dir;
+
+    int root_index = root_dir.lastIndexOf("/");
+    int dir_index = dir.lastIndexOf("/");
+    if(root_index > dir_index)
+    {
+        QString tmp = dir;
+        dir = root_dir;
+        root_dir = tmp;
+    }
+      QString sub_dir = dir;
+
+    while(root_dir != dir)//root_dir 总是短的
+    {
+        qDebug()<<"Now Dir:"<<dir;
+        QString tmp_dir = dir.left( dir.lastIndexOf("/"));
+        dir = tmp_dir;
+        RelativeAcount += 1;
+    }
+
+    if(sub_dir.length() > root_dir.length())
+        now_dir = sub_dir.right(sub_dir.length() - root_dir.length() - 1);
+
+
+
+    qDebug()<<"FFFFFFFFFFFFFFF:"<<now_dir<<"KKKKKKKKKKKKKKK"<<dir;
+
+       if(root_index > dir_index)
+       {
+           for(;RelativeAcount > 0; RelativeAcount--)
+                RelativeDir += "../";
+
+           RelativeDir += now_dir;
+       }
+       else if(root_index == dir_index)
+       {
+           RelativeDir += ".";
+           RelativeDir += now_dir;
+       }
+       else
+       {
+           for(;RelativeAcount > 0; RelativeAcount--)
+                RelativeDir += "./";
+
+           RelativeDir += now_dir;
+       }
+
+
+    qDebug()<<"root_dir:"<<dir;
+
+    return RelativeDir;
+}
+
+
+void MainWindow::on_actionSet_triggered()
+{
+    //this->set->exec();
+}
+
+void MainWindow::on_treeView_customContextMenuRequested(const QPoint &pos)
+{
+    qDebug()<<ui->treeView->indexAt(pos).data().toString();
+
+
+    if(!QString::fromLocal8Bit("引用").compare(ui->treeView->indexAt(pos).data().toString()))
+    {
+        qDebug()<<ui->treeView->indexAt(pos).data().toString();
+        QMenu *menu=new QMenu();
+        QAction *addAction = new QAction(QString::fromLocal8Bit("添加引用"),this);
+        connect(addAction,&QAction::triggered,this,&MainWindow::Quote);
+        menu->addAction(addAction);
+        menu->exec(QCursor::pos());
+
+    }
+}
+
+void MainWindow::Quote(bool checked)
+{
+     QString quote_dir = QFileDialog::getExistingDirectory();
+
+     if(quote_dir == ui->lineEdit->text())
+     {
+         QMessageBox box;
+         box.setText("can not add self!");
+         box.exec();
+     }else
+     {
+         QStandardItem * quote_sub = new QStandardItem(quote_dir);
+         quote_list.append(quote_dir);
+         quote_sub->setEditable(false);
+         quote_item->setChild(quote_item_acount,0,quote_sub);
+         quote_item_acount += 1;
+
+         AnalysisCurrentDirectoryFile(quote_sub,quote_dir,0,QUOTE);
+         on_pushButton_3_clicked();
+
+        qDebug()<<"Quote"<<quote_dir;
+     }
+
 }
