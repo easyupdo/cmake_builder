@@ -1,2 +1,2 @@
 # cmake_builder
-Automatic generated CMkeLists.txt for your project
+Automatic generated CMakeLists.txt for your project
