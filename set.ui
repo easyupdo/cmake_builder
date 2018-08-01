@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>770</width>
-    <height>464</height>
+    <width>935</width>
+    <height>476</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>460</x>
-     <y>390</y>
+     <x>640</x>
+     <y>430</y>
      <width>80</width>
      <height>20</height>
     </rect>
@@ -29,8 +29,8 @@
   <widget class="QPushButton" name="pushButton_2">
    <property name="geometry">
     <rect>
-     <x>590</x>
-     <y>390</y>
+     <x>770</x>
+     <y>430</y>
      <width>80</width>
      <height>20</height>
     </rect>
@@ -44,8 +44,8 @@
     <rect>
      <x>20</x>
      <y>30</y>
-     <width>711</width>
-     <height>341</height>
+     <width>901</width>
+     <height>391</height>
     </rect>
    </property>
    <property name="title">
@@ -54,17 +54,17 @@
    <widget class="QTextEdit" name="textEdit_2">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>450</x>
       <y>70</y>
-      <width>691</width>
-      <height>261</height>
+      <width>441</width>
+      <height>311</height>
      </rect>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_4">
     <property name="geometry">
      <rect>
-      <x>549</x>
+      <x>450</x>
       <y>40</y>
       <width>121</width>
       <height>20</height>
@@ -72,6 +72,29 @@
     </property>
     <property name="text">
      <string>Add Librarys </string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="textEdit_3">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>70</y>
+      <width>431</width>
+      <height>311</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_5">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>40</y>
+      <width>121</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Add Includes Path </string>
     </property>
    </widget>
   </widget>

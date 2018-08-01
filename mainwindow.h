@@ -55,7 +55,7 @@ public:
 
      void setProjectConfig(SProjcetConfig project_config);
 
-     void AddLibs(QStringList libs);
+     void AddLibsAndIncludes(QStringList libs, QStringList includes);
 
 
      QString GetRelativePath(QString dir);
@@ -84,7 +84,7 @@ private slots:
 public slots:
 
 signals:
-    void ToSet(QStringList libs);
+    void ToSet(QStringList libs,QStringList includes);
 
 
 private:
@@ -101,6 +101,7 @@ private:
     QStringList quote_list;
 
     QStringList other_libs;
+    QStringList other_includes;
 
 
    // QString project_name;

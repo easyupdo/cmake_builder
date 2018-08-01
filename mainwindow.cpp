@@ -101,7 +101,7 @@ void MainWindow::AnalysisCurrentDirectoryFile(QStandardItem *item ,QString root_
              item_rows = 0;
              for(itd;itd!=file_full.end();itd++)// add directory files
              {
-                     if(!(*itd).suffix().compare("cpp") || !(*itd).suffix().compare("c") || !(*itd).suffix().compare("h") || !(*itd).fileName().compare("CMakeLists.txt"))// file just .c .cpp
+                     if(!(*itd).suffix().compare("cpp") || !(*itd).suffix().compare("c") ||!(*itd).suffix().compare("cc")|| !(*itd).suffix().compare("h") || !(*itd).fileName().compare("CMakeLists.txt"))// file just .c .cpp
                      {
                          qDebug()<<(*itd).fileName();
                          QStandardItem * item1 = new QStandardItem((*itd).fileName());
@@ -128,7 +128,7 @@ void MainWindow::AnalysisCurrentDirectoryFile(QStandardItem *item ,QString root_
          for(it;it!=file_full.end();it++)
          {
              qDebug()<<"&&&&&&&&&&&&&&&&:"<<(*it).filePath();
-                 if(!(*it).suffix().compare("cpp") || !(*it).suffix().compare("c") || !(*it).suffix().compare("h") || !(*it).fileName().compare("CMakeLists.txt"))// file just .c .cpp
+                 if(!(*it).suffix().compare("cpp") || !(*it).suffix().compare("c") || !(*it).suffix().compare("cc")|| !(*it).suffix().compare("h") || !(*it).fileName().compare("CMakeLists.txt"))// file just .c .cpp
                  {
                      qDebug()<<(*it).fileName();
                      QStandardItem * item1 = new QStandardItem((*it).fileName());
@@ -157,7 +157,7 @@ void MainWindow::AnalysisCurrentDirectoryFile(QStandardItem *item ,QString root_
             item_rows = 0;
             for(itd;itd!=file_full.end();itd++)
             {
-                    if(!(*itd).suffix().compare("cpp") || !(*itd).suffix().compare("c") || !(*itd).suffix().compare("h") || !(*itd).fileName().compare("CMakeLists.txt"))// file just .c .cpp
+                    if(!(*itd).suffix().compare("cpp") || !(*itd).suffix().compare("c") || !(*itd).suffix().compare("cc")|| !(*itd).suffix().compare("h") || !(*itd).fileName().compare("CMakeLists.txt"))// file just .c .cpp
                     {
                         qDebug()<<(*itd).fileName();
                         QStandardItem * item1 = new QStandardItem((*itd).fileName());
@@ -180,7 +180,7 @@ void MainWindow::AnalysisCurrentDirectoryFile(QStandardItem *item ,QString root_
             for(it;it!=file_full.end();it++)
             {
 
-                    if(!(*it).suffix().compare("cpp") || !(*it).suffix().compare("c") || !(*it).suffix().compare("h") || !(*it).fileName().compare("CMakeLists.txt"))// file just .c .cpp
+                    if(!(*it).suffix().compare("cpp") || !(*it).suffix().compare("c") || !(*it).suffix().compare("cc")|| !(*it).suffix().compare("h") || !(*it).fileName().compare("CMakeLists.txt"))// file just .c .cpp
                     {
                         qDebug()<<(*it).fileName();
                         QStandardItem * item1 = new QStandardItem((*it).fileName());
@@ -190,10 +190,6 @@ void MainWindow::AnalysisCurrentDirectoryFile(QStandardItem *item ,QString root_
                     }
              }
     }
-
-
-
-
 
 
 }
@@ -342,10 +338,23 @@ void MainWindow::SetADirectoryCMakeListFile(QString current_dir, QString cmakeli
 
 
             ///******************************* 添加 第三方 库 *******************************
+            ///
                 if(sub_lists.length() <= 0)
                 {
+
+                    for(QStringList::iterator it = this->other_includes.begin();it != other_includes.end();it++)
+                    {
+                        str.clear();
+                        str = cmake_build::include_directories(*it,CMAKE_STRING);
+                        qDebug()<<str;
+                        cmake_config_file.write(str.toLatin1());
+                        cmake_config_file.write("\n");
+                    }
+
+
                     for(QStringList::iterator it = this->other_libs.begin();it != other_libs.end();it++)
                     {
+                        str.clear();
                         str = cmake_build::target_link_libraries(this->project_config.project_name,*it);
                         qDebug()<<str;
                         cmake_config_file.write(str.toLatin1());
@@ -501,9 +510,10 @@ void MainWindow::setProjectConfig(SProjcetConfig project_config)
 }
 
 
-void MainWindow::AddLibs(QStringList libs)
+void MainWindow::AddLibsAndIncludes(QStringList libs,QStringList includes)
 {
     this->other_libs = libs;
+    this->other_includes = includes;
     qDebug()<<"Receive signal!";
     for(QStringList::iterator it = other_libs.begin();it!=other_libs.end();it++)
         qDebug()<<"Receive:"<<*it;
@@ -577,9 +587,9 @@ void MainWindow::on_actionSet_triggered()
     Set * set = new Set;
 
     connect(this,&MainWindow::ToSet,set,&Set::FromMainWinidows);
-    connect(set,&Set::ToMainWindows,this,&MainWindow::AddLibs);
+    connect(set,&Set::ToMainWindows,this,&MainWindow::AddLibsAndIncludes);
 
-    emit this->ToSet(this->other_libs);
+    emit this->ToSet(this->other_libs,this->other_includes);
 
     set->exec();
 }
